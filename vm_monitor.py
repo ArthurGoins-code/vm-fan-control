@@ -11,6 +11,10 @@ import time
 import sys
 from datetime import datetime
 
+# Add config import
+sys.path.append('.')
+import config
+
 class GPUMonitor:
     def __init__(self, host_ip, host_port):
         self.host_ip = host_ip
@@ -51,6 +55,26 @@ class GPUMonitor:
             
         return None
     
+    def get_monitoring_interval(self, temperature):
+        """Calculate monitoring interval based on temperature"""
+        # If temperature is below minimum, use maximum interval
+        if temperature <= config.MIN_TEMP:
+            return config.MAX_MONITOR_INTERVAL
+        
+        # If temperature is above maximum, use minimum interval  
+        elif temperature >= config.MAX_TEMP:
+            return config.MIN_MONITOR_INTERVAL
+            
+        # Calculate proportional interval between min and max based on temperature
+        temp_range = config.MAX_TEMP - config.MIN_TEMP
+        temp_ratio = (temperature - config.MIN_TEMP) / temp_range
+        
+        # Interpolate between intervals
+        interval_range = config.MAX_MONITOR_INTERVAL - config.MIN_MONITOR_INTERVAL
+        interval = config.MAX_MONITOR_INTERVAL - (temp_ratio * interval_range)
+        
+        return round(interval)
+    
     def send_data(self, data):
         """Send GPU data to Proxmox host"""
         try:
@@ -83,9 +107,11 @@ class GPUMonitor:
                 if gpu_data:
                     print(f"GPU Data - Power: {gpu_data['power_draw']}W, Temp: {gpu_data['temperature']}°C")
                     self.send_data(gpu_data)
-                
-                # Wait before next reading (30 seconds)
-                time.sleep(30)
+                    
+                    # Calculate next interval based on current temperature
+                    interval = self.get_monitoring_interval(gpu_data['temperature'])
+                    print(f"Next monitoring in {interval} seconds")
+                    time.sleep(interval)
                 
             except KeyboardInterrupt:
                 print("Stopping monitor...")
