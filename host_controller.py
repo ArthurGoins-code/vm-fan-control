@@ -19,6 +19,9 @@ class FanController:
         self.min_temp = min_temp  # Minimum temperature for minimum speed
         self.socket = None
         self.gpu_data_history = deque(maxlen=10)  # Keep last 10 readings
+        pwm_enable_file = "/sys/class/hwmon/hwmon3/pwm1_enable"
+        with open(pwm_enable_file, 'w') as f:
+            f.write('1')  # Enable manual fan control
         
     def get_fan_speed(self, temperature):
         """Calculate fan speed based on temperature using adjustable curve"""
@@ -36,27 +39,24 @@ class FanController:
         return round(speed)
     
     def set_fan_speed(self, speed):
-        """Set fan speed using fancontrol"""
+        """Set fan speed using sysfs interface"""
         try:
-            # This is a simplified version - in practice you'd need to 
-            # configure your fancontrol settings properly
-            print(f"Setting fan speed to {speed}%")
+            # Convert percentage to PWM value (0-255)
+            pwm_value = int((speed / 100.0) * 255)
+            print(f"Setting fan speed to {speed}% ({pwm_value}/255)")
             
-            # Example command (this may vary based on your fancontrol setup)
-            # You'll need to adjust this based on your actual configuration
-            result = subprocess.run([
-                'pwmconfig',  # This is just an example - you'd use your actual fan control command
-                '--set',
-                f'fan1={speed}'
-            ], capture_output=True, text=True)
+            # Write to the sysfs interface for fan control
+            # The path may vary based on your system - adjust accordingly
+            pwm_file = "/sys/class/hwmon/hwmon3/pwm1"
             
-            if result.returncode == 0:
-                print(f"Fan speed set to {speed}% successfully")
-            else:
-                print(f"Failed to set fan speed: {result.stderr}")
+            with open(pwm_file, 'w') as f:
+                f.write(str(pwm_value))
                 
+            print(f"Fan speed set to {speed}% successfully")
+            
         except Exception as e:
             print(f"Error setting fan speed: {e}")
+            print("Make sure you have proper permissions and the correct sysfs path")
     
     def process_gpu_data(self, data):
         """Process GPU data and adjust fan speed"""

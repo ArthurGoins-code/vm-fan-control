@@ -20,7 +20,7 @@ VM_HOST_IP = "192.168.1.50"  # Replace with actual Proxmox host IP
 
 # Fan control parameters
 MIN_TEMP = 60        # Temperature at which to start increasing speed
-MAX_TEMP = 85        # Temperature at which to reach maximum speed
+MAX_TEMP = 80        # Temperature at which to reach maximum speed
 ```
 
 ### 3. Run the Components
@@ -39,8 +39,8 @@ python3 vm_monitor.py 192.168.1.50 8888
 
 ### GPU Monitoring (VM Side)
 - The VM monitor runs `nvidia-smi` with an adjustable interval based on GPU temperature
-- When temperature is low, it monitors every 60 seconds (MAX_MONITOR_INTERVAL)
-- When temperature is high, it monitors every 5 seconds (MIN_MONITOR_INTERVAL) 
+- When temperature is low, it monitors every 30 seconds (MAX_MONITOR_INTERVAL)
+- When temperature is high, it monitors every 1 second (MIN_MONITOR_INTERVAL) 
 - Data is sent via TCP socket to the Proxmox host
 - Multiple readings are averaged for smoother fan control
 
@@ -71,9 +71,9 @@ The current implementation uses a linear interpolation between min and max tempe
 - Check that port 8888 is not blocked by firewall
 
 ### Fan Control Not Working
-- The fan control implementation in `set_fan_speed()` is a placeholder
-- You'll need to replace it with actual commands for your system's fancontrol setup
-- Common commands include: `pwmconfig`, `fancontrol`, or direct hardware interface commands
+- The fan control implementation in `set_fan_speed()` uses the correct command for your system: `echo <speed> | tee /sys/class/hwmon/hwmon3/pwm1`
+- You'll need to ensure you have proper permissions to write to the sysfs interface
+- For your specific setup, fan speed values range from 0 to 255 (converted from percentage)
 
 ## Requirements
 
@@ -84,5 +84,4 @@ The current implementation uses a linear interpolation between min and max tempe
 
 ### On Proxmox Host:
 - Python 3
-- fancontrol utility installed
-- Appropriate permissions for controlling fan hardware
+- Appropriate permissions for controlling fan hardware through sysfs interface

@@ -45,22 +45,26 @@ def set_fan_speed(self, speed):
         print(f"Error setting fan speed: {e}")
 ```
 
-### 3. Using sysfs (Linux)
-Some systems expose fan control through sysfs:
+### 3. Using sysfs (Linux) - Specific for Your Setup
+Based on your command, the correct path is `/sys/class/hwmon/hwmon3/pwm1` with values from 0 to 255:
 
 ```python
 def set_fan_speed(self, speed):
     """Set fan speed using sysfs"""
     try:
+        # Convert percentage to PWM value (0-255)
+        pwm_value = int((speed / 100.0) * 255)
+        
         # Path to your fan's PWM control file
-        pwm_file = "/sys/class/hwmon/hwmon0/pwm1"
+        pwm_file = "/sys/class/hwmon/hwmon3/pwm1"
         
         with open(pwm_file, 'w') as f:
-            f.write(str(speed))
+            f.write(str(pwm_value))
             
-        print(f"Fan speed set to {speed}%")
+        print(f"Fan speed set to {speed}% successfully")
     except Exception as e:
         print(f"Error setting fan speed: {e}")
+        print("Make sure you have proper permissions and the correct sysfs path")
 ```
 
 ## Finding Your Fan Control Method
