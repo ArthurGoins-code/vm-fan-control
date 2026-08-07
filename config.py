@@ -31,6 +31,6 @@ PWM_CHANNELS = [1, 2, 3, 4, 7]  # e.g. pwm1, pwm2, pwm3
 
 # Host CPU temperature monitoring (read locally via `sensors` on the Proxmox
 # host). The label below is matched against `sensors -j` output (e.g. the
-# k10temp "Tccd1" chiplet die temp on AMD CPUs). This temperature drives the
+# k10temp "Tctl" chiplet die temp on AMD CPUs). This temperature drives the
 # same fan curve as the GPU temperature - whichever is hotter wins.
-CPU_TEMP_SENSOR_LABEL = "Tccd1"
+CPU_TEMP_SENSOR_LABEL = "Tctl"
