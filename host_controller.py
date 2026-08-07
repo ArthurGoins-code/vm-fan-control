@@ -12,37 +12,62 @@ import sys
 from datetime import datetime
 from collections import deque
 
+sys.path.append('.')
+import config
+
 class FanController:
-    def __init__(self, port, max_temp=85, min_temp=60):
+    def __init__(self, port, max_temp=None, min_temp=None):
         self.port = port
-        self.max_temp = max_temp  # Maximum temperature for full speed
-        self.min_temp = min_temp  # Minimum temperature for minimum speed
+        self.max_temp = max_temp if max_temp is not None else config.MAX_TEMP
+        self.min_temp = min_temp if min_temp is not None else config.MIN_TEMP
+        self.min_fan_speed = config.MIN_FAN_SPEED
+        self.max_fan_speed = config.MAX_FAN_SPEED
+        # Temperature/speed at which the fan should immediately ramp up,
+        # rather than waiting for the gentle part of the curve
+        self.ramp_trigger_temp = config.RAMP_TRIGGER_TEMP
+        self.ramp_trigger_fan_speed = config.RAMP_TRIGGER_FAN_SPEED
+        self.curve_exponent = config.CURVE_EXPONENT
         self.socket = None
-        self.gpu_data_history = deque(maxlen=10)  # Keep last 10 readings
+        self.gpu_data_history = deque(maxlen=config.TEMP_HISTORY_SIZE)  # Keep last N readings
         pwm_enable_file = "/sys/class/hwmon/hwmon3/pwm1_enable"
         with open(pwm_enable_file, 'w') as f:
             f.write('1')  # Enable manual fan control
         
     def get_fan_speed(self, temperature):
-        """Calculate fan speed based on temperature using aggressive curve"""
-        # If temperature is below minimum, use minimum speed (0%)
+        """Calculate fan speed using a two-stage, adjustable fan curve.
+
+        - Below min_temp: idle (min_fan_speed)
+        - min_temp .. ramp_trigger_temp: gentle linear ramp up to ramp_trigger_fan_speed
+        - At/above ramp_trigger_temp: fan speed immediately jumps to
+          ramp_trigger_fan_speed and then climbs steeply toward max_fan_speed
+          as it approaches max_temp
+        """
+        # If temperature is below minimum, use minimum speed
         if temperature <= self.min_temp:
-            return 0  # Minimum 0% speed at idle
+            return self.min_fan_speed
         elif temperature >= self.max_temp:
-            return 100  # Maximum 100% speed at max temperature
-        
-        # Calculate aggressive fan curve - ramp up quickly and sharply
-        # Using quadratic curve for more aggressive response
-        temp_range = self.max_temp - self.min_temp
-        temp_ratio = (temperature - self.min_temp) / temp_range
-        
-        # Quadratic curve for more aggressive ramp-up
-        # This makes it go from 0% to 100% very quickly as temperature approaches max
-        fan_speed = 100 * (temp_ratio ** 2.5)  # More aggressive exponential curve
-        
+            return self.max_fan_speed
+
+        if temperature < self.ramp_trigger_temp:
+            # Gentle ramp from min_fan_speed up to ramp_trigger_fan_speed
+            temp_range = self.ramp_trigger_temp - self.min_temp
+            temp_ratio = (temperature - self.min_temp) / temp_range
+            fan_speed = self.min_fan_speed + temp_ratio * (
+                self.ramp_trigger_fan_speed - self.min_fan_speed
+            )
+        else:
+            # Immediate, steep ramp from ramp_trigger_fan_speed up to max_fan_speed.
+            # Exponent < 1 makes the curve rise fast right after the trigger point
+            # then level off as it nears max_temp.
+            temp_range = self.max_temp - self.ramp_trigger_temp
+            temp_ratio = (temperature - self.ramp_trigger_temp) / temp_range
+            fan_speed = self.ramp_trigger_fan_speed + (
+                temp_ratio ** (1 / self.curve_exponent)
+            ) * (self.max_fan_speed - self.ramp_trigger_fan_speed)
+
         # Ensure we don't go below minimum or above maximum
-        fan_speed = max(0, min(100, fan_speed))
-        
+        fan_speed = max(self.min_fan_speed, min(self.max_fan_speed, fan_speed))
+
         return round(fan_speed)
     
     def set_fan_speed(self, speed):
@@ -78,11 +103,20 @@ class FanController:
                 avg_temp = sum(self.gpu_data_history) / len(self.gpu_data_history)
             else:
                 avg_temp = temperature
-                
-            print(f"Average GPU Temperature: {avg_temp:.1f}°C")
-            
+
+            # Once we're past the ramp trigger, react to the current reading
+            # immediately instead of waiting for the rolling average to catch
+            # up (which would otherwise delay the ramp-up). Below the trigger,
+            # keep using the average to avoid fan speed flapping at idle.
+            if temperature >= self.ramp_trigger_temp:
+                effective_temp = max(temperature, avg_temp)
+            else:
+                effective_temp = avg_temp
+
+            print(f"Current: {temperature:.1f}°C | Average: {avg_temp:.1f}°C")
+
             # Calculate fan speed based on temperature
-            fan_speed = self.get_fan_speed(avg_temp)
+            fan_speed = self.get_fan_speed(effective_temp)
             print(f"Setting fan speed to {fan_speed}%")
             
             # Set the fan speed

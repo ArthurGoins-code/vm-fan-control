@@ -18,5 +18,12 @@ MAX_FAN_SPEED = 100  # Maximum fan speed percentage (100% for max temp)
 MIN_TEMP = 60        # Temperature at which to start increasing speed
 MAX_TEMP = 77        # Temperature at which to reach maximum speed
 
+# Ramp trigger - as soon as this temperature is hit, the fan immediately
+# jumps to RAMP_TRIGGER_FAN_SPEED and continues ramping steeply toward
+# MAX_FAN_SPEED, instead of waiting for the gentle curve below MIN_TEMP..RAMP_TRIGGER_TEMP
+RAMP_TRIGGER_TEMP = 65        # Temperature (°C) that triggers an immediate ramp-up
+RAMP_TRIGGER_FAN_SPEED = 60   # Fan speed (%) to jump to as soon as RAMP_TRIGGER_TEMP is reached
+CURVE_EXPONENT = 2.5          # Steepness of the ramp between RAMP_TRIGGER_TEMP and MAX_TEMP (>1 = steeper)
+
 # Advanced settings
 TEMP_HISTORY_SIZE = 10  # Number of temperature readings to average
