@@ -1,0 +1,14 @@
+[Unit]
+Description=VM Fan Control Host Controller
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/arthur/GitHub Projects/vm-fan-control
+ExecStart=/usr/bin/python3 /home/arthur/GitHub Projects/vm-fan-control/host_controller.py 8888
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
