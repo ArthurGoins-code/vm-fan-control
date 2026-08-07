@@ -56,7 +56,7 @@ class GPUMonitor:
         return None
     
     def get_monitoring_interval(self, temperature):
-        """Calculate monitoring interval based on temperature"""
+        """Calculate monitoring interval (in milliseconds) based on temperature"""
         # If temperature is below minimum, use maximum interval
         if temperature <= config.MIN_TEMP:
             return config.MAX_MONITOR_INTERVAL
@@ -71,9 +71,9 @@ class GPUMonitor:
         
         # Interpolate between intervals
         interval_range = config.MAX_MONITOR_INTERVAL - config.MIN_MONITOR_INTERVAL
-        interval = config.MAX_MONITOR_INTERVAL - (temp_ratio * interval_range)
+        interval_ms = config.MAX_MONITOR_INTERVAL - (temp_ratio * interval_range)
         
-        return round(interval)
+        return round(interval_ms)
     
     def send_data(self, data):
         """Send GPU data to Proxmox host"""
@@ -108,10 +108,10 @@ class GPUMonitor:
                     print(f"GPU Data - Power: {gpu_data['power_draw']}W, Temp: {gpu_data['temperature']}°C")
                     self.send_data(gpu_data)
                     
-                    # Calculate next interval based on current temperature
-                    interval = self.get_monitoring_interval(gpu_data['temperature'])
-                    print(f"Next monitoring in {interval} seconds")
-                    time.sleep(interval)
+                    # Calculate next interval (ms) based on current temperature
+                    interval_ms = self.get_monitoring_interval(gpu_data['temperature'])
+                    print(f"Next monitoring in {interval_ms} ms")
+                    time.sleep(interval_ms / 1000.0)
                 
             except KeyboardInterrupt:
                 print("Stopping monitor...")
