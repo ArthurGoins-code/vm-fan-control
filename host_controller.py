@@ -24,19 +24,26 @@ class FanController:
             f.write('1')  # Enable manual fan control
         
     def get_fan_speed(self, temperature):
-        """Calculate fan speed based on temperature using adjustable curve"""
-        # Linear interpolation between min and max temperatures
+        """Calculate fan speed based on temperature using aggressive curve"""
+        # If temperature is below minimum, use minimum speed (0%)
         if temperature <= self.min_temp:
-            return 30  # Minimum 30% speed
+            return 0  # Minimum 0% speed at idle
         elif temperature >= self.max_temp:
-            return 100  # Maximum 100% speed
+            return 100  # Maximum 100% speed at max temperature
         
-        # Calculate proportional speed
-        speed_range = self.max_temp - self.min_temp
-        temp_ratio = (temperature - self.min_temp) / speed_range
-        speed = 30 + (70 * temp_ratio)  # Between 30% and 100%
+        # Calculate aggressive fan curve - ramp up quickly and sharply
+        # Using quadratic curve for more aggressive response
+        temp_range = self.max_temp - self.min_temp
+        temp_ratio = (temperature - self.min_temp) / temp_range
         
-        return round(speed)
+        # Quadratic curve for more aggressive ramp-up
+        # This makes it go from 0% to 100% very quickly as temperature approaches max
+        fan_speed = 100 * (temp_ratio ** 2.5)  # More aggressive exponential curve
+        
+        # Ensure we don't go below minimum or above maximum
+        fan_speed = max(0, min(100, fan_speed))
+        
+        return round(fan_speed)
     
     def set_fan_speed(self, speed):
         """Set fan speed using sysfs interface"""

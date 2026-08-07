@@ -4,7 +4,7 @@ Configuration file for VM Fan Control System
 """
 
 # Network configuration
-VM_HOST_IP = "192.168.1.68"  # Replace with actual VM IP
+VM_HOST_IP = "192.168.1.68"  # Replace with actual Proxmox host IP
 VM_HOST_PORT = 8888
 
 # GPU monitoring parameters
@@ -13,8 +13,8 @@ MIN_MONITOR_INTERVAL = 1   # Minimum monitoring interval in seconds (when temp i
 MAX_MONITOR_INTERVAL = 20  # Maximum monitoring interval in seconds (when temp is low)
 
 # Fan control parameters
-MIN_FAN_SPEED = 30   # Minimum fan speed percentage
-MAX_FAN_SPEED = 100  # Maximum fan speed percentage
+MIN_FAN_SPEED = 0    # Minimum fan speed percentage (0% for idle)
+MAX_FAN_SPEED = 100  # Maximum fan speed percentage (100% for max temp)
 MIN_TEMP = 60        # Temperature at which to start increasing speed
 MAX_TEMP = 77        # Temperature at which to reach maximum speed
 
