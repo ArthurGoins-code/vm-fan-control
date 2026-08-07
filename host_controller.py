@@ -10,7 +10,6 @@ import time
 import subprocess
 import sys
 from datetime import datetime
-from collections import deque
 
 sys.path.append('.')
 import config
@@ -28,7 +27,6 @@ class FanController:
         self.ramp_trigger_fan_speed = config.RAMP_TRIGGER_FAN_SPEED
         self.curve_exponent = config.CURVE_EXPONENT
         self.socket = None
-        self.gpu_data_history = deque(maxlen=config.TEMP_HISTORY_SIZE)  # Keep last N readings
         pwm_enable_file = "/sys/class/hwmon/hwmon3/pwm1_enable"
         with open(pwm_enable_file, 'w') as f:
             f.write('1')  # Enable manual fan control
@@ -94,29 +92,11 @@ class FanController:
         """Process GPU data and adjust fan speed"""
         try:
             temperature = data['temperature']
-            
-            # Store in history for averaging
-            self.gpu_data_history.append(temperature)
-            
-            # Calculate average temperature from recent readings
-            if len(self.gpu_data_history) > 0:
-                avg_temp = sum(self.gpu_data_history) / len(self.gpu_data_history)
-            else:
-                avg_temp = temperature
 
-            # Once we're past the ramp trigger, react to the current reading
-            # immediately instead of waiting for the rolling average to catch
-            # up (which would otherwise delay the ramp-up). Below the trigger,
-            # keep using the average to avoid fan speed flapping at idle.
-            if temperature >= self.ramp_trigger_temp:
-                effective_temp = max(temperature, avg_temp)
-            else:
-                effective_temp = avg_temp
+            print(f"Current GPU Temperature: {temperature:.1f}°C")
 
-            print(f"Current: {temperature:.1f}°C | Average: {avg_temp:.1f}°C")
-
-            # Calculate fan speed based on temperature
-            fan_speed = self.get_fan_speed(effective_temp)
+            # Calculate fan speed based on the current temperature
+            fan_speed = self.get_fan_speed(temperature)
             print(f"Setting fan speed to {fan_speed}%")
             
             # Set the fan speed
