@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/home/ubuntu/vm-fan-control
-ExecStart=/usr/bin/python3 /home/arthur/GitHub\ Projects/vm-fan-control/host_controller.py 8888
+WorkingDirectory=/root/vm-fan-control
+ExecStart=/usr/bin/python3 /root/vm-fan-control/host_controller.py 8888
 Restart=always
 RestartSec=10
 
