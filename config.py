@@ -27,4 +27,4 @@ CURVE_EXPONENT = 2.5          # Steepness of the ramp between RAMP_TRIGGER_TEMP 
 # PWM hwmon channels to control. All channels listed here are enabled for
 # manual control and driven together using the same fan curve.
 HWMON_PATH = "/sys/class/hwmon/hwmon3"
-PWM_CHANNELS = [1, 2, 3]  # e.g. pwm1, pwm2, pwm3
+PWM_CHANNELS = [1, 2, 3, 4, 7]  # e.g. pwm1, pwm2, pwm3
