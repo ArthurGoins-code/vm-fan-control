@@ -28,3 +28,9 @@ CURVE_EXPONENT = 2.5          # Steepness of the ramp between RAMP_TRIGGER_TEMP 
 # manual control and driven together using the same fan curve.
 HWMON_PATH = "/sys/class/hwmon/hwmon3"
 PWM_CHANNELS = [1, 2, 3]  # e.g. pwm1, pwm2, pwm3
+
+# Host CPU temperature monitoring (read locally via `sensors` on the Proxmox
+# host). The label below is matched against `sensors -j` output (e.g. the
+# k10temp "Tccd1" chiplet die temp on AMD CPUs). This temperature drives the
+# same fan curve as the GPU temperature - whichever is hotter wins.
+CPU_TEMP_SENSOR_LABEL = "Tccd1"

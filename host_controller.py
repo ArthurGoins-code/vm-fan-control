@@ -29,6 +29,7 @@ class FanController:
         self.socket = None
         self.hwmon_path = config.HWMON_PATH
         self.pwm_channels = config.PWM_CHANNELS
+        self.cpu_temp_sensor_label = config.CPU_TEMP_SENSOR_LABEL
         for channel in self.pwm_channels:
             pwm_enable_file = f"{self.hwmon_path}/pwm{channel}_enable"
             with open(pwm_enable_file, 'w') as f:
@@ -70,6 +71,27 @@ class FanController:
         fan_speed = max(self.min_fan_speed, min(self.max_fan_speed, fan_speed))
 
         return round(fan_speed)
+
+    def get_cpu_temperature(self):
+        """Read the host CPU temperature (e.g. k10temp 'Tccd1') via `sensors`"""
+        try:
+            result = subprocess.run(
+                ['sensors', '-j'], capture_output=True, text=True, check=True
+            )
+            data = json.loads(result.stdout)
+
+            for chip_readings in data.values():
+                for label, values in chip_readings.items():
+                    if self.cpu_temp_sensor_label not in label:
+                        continue
+                    for key, value in values.items():
+                        if key.endswith('_input'):
+                            return float(value)
+
+        except Exception as e:
+            print(f"Error reading CPU temperature: {e}")
+
+        return None
     
     def set_fan_speed(self, speed):
         """Set fan speed on all configured PWM channels using sysfs interface"""
@@ -92,14 +114,21 @@ class FanController:
                 print("Make sure you have proper permissions and the correct sysfs path")
     
     def process_gpu_data(self, data):
-        """Process GPU data and adjust fan speed"""
+        """Process GPU data and adjust fan speed based on the hotter of the
+        GPU and host CPU temperatures"""
         try:
-            temperature = data['temperature']
+            gpu_temp = data['temperature']
+            cpu_temp = self.get_cpu_temperature()
 
-            print(f"Current GPU Temperature: {temperature:.1f}°C")
+            if cpu_temp is not None:
+                print(f"GPU Temperature: {gpu_temp:.1f}°C | CPU ({self.cpu_temp_sensor_label}) Temperature: {cpu_temp:.1f}°C")
+                effective_temp = max(gpu_temp, cpu_temp)
+            else:
+                print(f"GPU Temperature: {gpu_temp:.1f}°C | CPU ({self.cpu_temp_sensor_label}) Temperature: unavailable")
+                effective_temp = gpu_temp
 
-            # Calculate fan speed based on the current temperature
-            fan_speed = self.get_fan_speed(temperature)
+            # Calculate fan speed based on the hotter of the two temperatures
+            fan_speed = self.get_fan_speed(effective_temp)
             print(f"Setting fan speed to {fan_speed}%")
             
             # Set the fan speed
