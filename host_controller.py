@@ -27,9 +27,12 @@ class FanController:
         self.ramp_trigger_fan_speed = config.RAMP_TRIGGER_FAN_SPEED
         self.curve_exponent = config.CURVE_EXPONENT
         self.socket = None
-        pwm_enable_file = "/sys/class/hwmon/hwmon3/pwm1_enable"
-        with open(pwm_enable_file, 'w') as f:
-            f.write('1')  # Enable manual fan control
+        self.hwmon_path = config.HWMON_PATH
+        self.pwm_channels = config.PWM_CHANNELS
+        for channel in self.pwm_channels:
+            pwm_enable_file = f"{self.hwmon_path}/pwm{channel}_enable"
+            with open(pwm_enable_file, 'w') as f:
+                f.write('1')  # Enable manual fan control
         
     def get_fan_speed(self, temperature):
         """Calculate fan speed using a two-stage, adjustable fan curve.
@@ -69,24 +72,24 @@ class FanController:
         return round(fan_speed)
     
     def set_fan_speed(self, speed):
-        """Set fan speed using sysfs interface"""
-        try:
-            # Convert percentage to PWM value (0-255)
-            pwm_value = int((speed / 100.0) * 255)
-            print(f"Setting fan speed to {speed}% ({pwm_value}/255)")
-            
-            # Write to the sysfs interface for fan control
-            # The path may vary based on your system - adjust accordingly
-            pwm_file = "/sys/class/hwmon/hwmon3/pwm1"
-            
-            with open(pwm_file, 'w') as f:
-                f.write(str(pwm_value))
-                
-            print(f"Fan speed set to {speed}% successfully")
-            
-        except Exception as e:
-            print(f"Error setting fan speed: {e}")
-            print("Make sure you have proper permissions and the correct sysfs path")
+        """Set fan speed on all configured PWM channels using sysfs interface"""
+        # Convert percentage to PWM value (0-255)
+        pwm_value = int((speed / 100.0) * 255)
+        print(f"Setting fan speed to {speed}% ({pwm_value}/255) on pwm{self.pwm_channels}")
+
+        for channel in self.pwm_channels:
+            try:
+                # The path may vary based on your system - adjust accordingly
+                pwm_file = f"{self.hwmon_path}/pwm{channel}"
+
+                with open(pwm_file, 'w') as f:
+                    f.write(str(pwm_value))
+
+                print(f"pwm{channel} set to {speed}% successfully")
+
+            except Exception as e:
+                print(f"Error setting pwm{channel} speed: {e}")
+                print("Make sure you have proper permissions and the correct sysfs path")
     
     def process_gpu_data(self, data):
         """Process GPU data and adjust fan speed"""

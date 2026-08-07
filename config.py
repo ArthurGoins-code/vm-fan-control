@@ -23,3 +23,8 @@ MAX_TEMP = 77        # Temperature at which to reach maximum speed
 RAMP_TRIGGER_TEMP = 65        # Temperature (°C) that triggers an immediate ramp-up
 RAMP_TRIGGER_FAN_SPEED = 75   # Fan speed (%) to jump to as soon as RAMP_TRIGGER_TEMP is reached
 CURVE_EXPONENT = 2.5          # Steepness of the ramp between RAMP_TRIGGER_TEMP and MAX_TEMP (>1 = steeper)
+
+# PWM hwmon channels to control. All channels listed here are enabled for
+# manual control and driven together using the same fan curve.
+HWMON_PATH = "/sys/class/hwmon/hwmon3"
+PWM_CHANNELS = [1, 2, 3]  # e.g. pwm1, pwm2, pwm3

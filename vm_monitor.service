@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
+User=ubuntu
 WorkingDirectory=/home/ubuntu/vm-fan-control
 ExecStart=/usr/bin/python3 /home/ubuntu/vm-fan-control/vm_monitor.py 192.168.1.68 8888
 Restart=always
