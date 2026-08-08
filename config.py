@@ -14,15 +14,15 @@ MAX_MONITOR_INTERVAL = 2000  # Maximum monitoring interval in milliseconds (when
 # Fan control parameters
 MIN_FAN_SPEED = 10    # Minimum fan speed percentage (0% for idle)
 MAX_FAN_SPEED = 100  # Maximum fan speed percentage (100% for max temp)
-MIN_TEMP = 60        # Temperature at which to start increasing speed
-MAX_TEMP = 77        # Temperature at which to reach maximum speed
+MIN_TEMP = 55        # Temperature at which to start increasing speed (lowered from 60)
+MAX_TEMP = 80        # Temperature at which to reach maximum speed (higher from 77)
 
 # Ramp trigger - as soon as this temperature is hit, the fan immediately
 # jumps to RAMP_TRIGGER_FAN_SPEED and continues ramping steeply toward
 # MAX_FAN_SPEED, instead of waiting for the gentle curve below MIN_TEMP..RAMP_TRIGGER_TEMP
 RAMP_TRIGGER_TEMP = 65        # Temperature (°C) that triggers an immediate ramp-up
-RAMP_TRIGGER_FAN_SPEED = 75   # Fan speed (%) to jump to as soon as RAMP_TRIGGER_TEMP is reached
-CURVE_EXPONENT = 2.5          # Steepness of the ramp between RAMP_TRIGGER_TEMP and MAX_TEMP (>1 = steeper)
+RAMP_TRIGGER_FAN_SPEED = 40   # Fan speed (%) to jump to as soon as RAMP_TRIGGER_TEMP is reached
+CURVE_EXPONENT = 3.0          # Steepness of the ramp between RAMP_TRIGGER_TEMP and MAX_TEMP (>1 = steeper)
 
 # PWM hwmon channels to control. All channels listed here are enabled for
 # manual control and driven together using the same fan curve.
@@ -41,23 +41,23 @@ CPU_TEMP_SENSOR_LABEL = "Tctl"
 INDEPENDENT_FAN_CONTROL = False
 
 # For independent control, define separate parameters for GPU and CPU
-GPU_MIN_TEMP = 60
-GPU_MAX_TEMP = 77
+GPU_MIN_TEMP = 55
+GPU_MAX_TEMP = 80
 GPU_MIN_FAN_SPEED = 10
 GPU_MAX_FAN_SPEED = 100
 GPU_RAMP_TRIGGER_TEMP = 65
-GPU_RAMP_TRIGGER_FAN_SPEED = 75
-GPU_CURVE_EXPONENT = 2.5
+GPU_RAMP_TRIGGER_FAN_SPEED = 40
+GPU_CURVE_EXPONENT = 3.0
 
-CPU_MIN_TEMP = 60
-CPU_MAX_TEMP = 77
+CPU_MIN_TEMP = 55
+CPU_MAX_TEMP = 80
 CPU_MIN_FAN_SPEED = 10
 CPU_MAX_FAN_SPEED = 100
 CPU_RAMP_TRIGGER_TEMP = 65
-CPU_RAMP_TRIGGER_FAN_SPEED = 75
-CPU_CURVE_EXPONENT = 2.5
+CPU_RAMP_TRIGGER_FAN_SPEED = 40
+CPU_CURVE_EXPONENT = 3.0
 
 # Hysteresis settings to prevent fan oscillation
 # When enabled, fan speed changes only when temperature crosses hysteresis thresholds
 FAN_HYSTERESIS_ENABLED = True
-FAN_HYSTERESIS_TEMP_RANGE = 5.0  # Temperature range (°C) for hysteresis
+FAN_HYSTERESIS_TEMP_RANGE = 2.0  # Temperature range (°C) for hysteresis
