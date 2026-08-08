@@ -52,6 +52,15 @@ class FanController:
             self.cpu_ramp_trigger_fan_speed = config.CPU_RAMP_TRIGGER_FAN_SPEED
             self.cpu_curve_exponent = config.CPU_CURVE_EXPONENT
         
+        # Initialize hysteresis settings
+        self.fan_hysteresis_enabled = config.FAN_HYSTERESIS_ENABLED
+        self.hysteresis_temp_range = config.FAN_HYSTERESIS_TEMP_RANGE
+        
+        # Track previous state for hysteresis
+        self.previous_gpu_temp = None
+        self.previous_cpu_temp = None
+        self.previous_fan_speed = None
+        
         # Enable manual control for all PWM channels
         for channel in self.pwm_channels:
             pwm_enable_file = f"{self.hwmon_path}/pwm{channel}_enable"
@@ -122,7 +131,25 @@ class FanController:
 
         # Ensure we don't go below minimum or above maximum
         fan_speed = max(min_fan_speed, min(max_fan_speed, fan_speed))
-
+        
+        # Apply hysteresis if enabled to prevent oscillation
+        if self.fan_hysteresis_enabled:
+            # For hysteresis, we'll only make fan speed changes when temperature
+            # crosses certain thresholds (hysteresis_temp_range)
+            
+            # Get the appropriate previous temperature for tracking
+            prev_temp = self.previous_gpu_temp if is_gpu_temp else self.previous_cpu_temp
+            
+            if prev_temp is not None:
+                temp_diff = abs(temperature - prev_temp)
+                
+                # If temperature hasn't changed significantly, return the last fan speed
+                if temp_diff < self.hysteresis_temp_range:
+                    # Temperature hasn't changed enough to justify a fan speed change
+                    # Return previous fan speed if we have one
+                    if self.previous_fan_speed is not None:
+                        return self.previous_fan_speed
+        
         return round(fan_speed)
 
     def get_cpu_temperature(self):

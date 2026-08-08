@@ -56,3 +56,8 @@ CPU_MAX_FAN_SPEED = 100
 CPU_RAMP_TRIGGER_TEMP = 65
 CPU_RAMP_TRIGGER_FAN_SPEED = 75
 CPU_CURVE_EXPONENT = 2.5
+
+# Hysteresis settings to prevent fan oscillation
+# When enabled, fan speed changes only when temperature crosses hysteresis thresholds
+FAN_HYSTERESIS_ENABLED = True
+FAN_HYSTERESIS_TEMP_RANGE = 2.0  # Temperature range (°C) for hysteresis
