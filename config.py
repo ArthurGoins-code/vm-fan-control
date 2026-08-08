@@ -34,3 +34,25 @@ PWM_CHANNELS = [1, 2, 3, 4, 7]  # e.g. pwm1, pwm2, pwm3
 # k10temp "Tctl" chiplet die temp on AMD CPUs). This temperature drives the
 # same fan curve as the GPU temperature - whichever is hotter wins.
 CPU_TEMP_SENSOR_LABEL = "Tctl"
+
+# Independent fan control options
+# Set to True to enable independent control of GPU and CPU fans
+# When False (default), uses joint control mode where both temperatures are considered together
+INDEPENDENT_FAN_CONTROL = False
+
+# For independent control, define separate parameters for GPU and CPU
+GPU_MIN_TEMP = 60
+GPU_MAX_TEMP = 77
+GPU_MIN_FAN_SPEED = 10
+GPU_MAX_FAN_SPEED = 100
+GPU_RAMP_TRIGGER_TEMP = 65
+GPU_RAMP_TRIGGER_FAN_SPEED = 75
+GPU_CURVE_EXPONENT = 2.5
+
+CPU_MIN_TEMP = 60
+CPU_MAX_TEMP = 77
+CPU_MIN_FAN_SPEED = 10
+CPU_MAX_FAN_SPEED = 100
+CPU_RAMP_TRIGGER_TEMP = 65
+CPU_RAMP_TRIGGER_FAN_SPEED = 75
+CPU_CURVE_EXPONENT = 2.5
